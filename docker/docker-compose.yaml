@@ -1,0 +1,40 @@
+services:
+  ros2_realsense-rtabmap:
+    # image: ros-humble-realsense-rtabmap #for existant image
+    build: . #for build
+    container_name: ros-humble-realsense-rtabmap
+    network_mode: host
+    privileged: true
+    restart: "no"
+    ipc: host
+    pid: host
+    
+    environment:
+      DISPLAY: $DISPLAY                 
+      ROS_DOMAIN_ID: 0
+      ROS_DISTRO: humble
+    
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix   # GUI
+      - /dev/bus/usb:/dev/bus/usb       # USB
+    
+    command: >
+      bash -c "
+      echo 'Current directory: ' && pwd &&
+      
+      source /opt/ros/humble/setup.bash &&
+      
+      if [ -f /ros_ws/scripts/start.sh ]; then
+        echo 'Found start.sh, checking permissions:' &&
+        ls -la /ros_ws/scripts/start.sh &&
+        echo 'Making executable if needed:' &&
+        chmod +x /ros_ws/scripts/start.sh
+        echo 'Launching start.sh...' &&
+        exec /ros_ws/scripts/start.sh
+      else
+        echo 'ERROR: start.sh not found in /ros_ws/scripts!' &&
+        echo 'Searching in other locations:' &&
+        find /ros_ws -name start.sh &&
+        exit 1
+      fi
+      "
